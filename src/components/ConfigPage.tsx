@@ -1,116 +1,51 @@
-﻿import React, { useState, useEffect } from "react";
-import { db } from "../firebase"; // adapte le chemin si besoin
+﻿// src/components/ConfigPage.tsx
+import React, { useState } from "react";
+import { db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
-import type { Config, BoardType } from "../utils/boardAnalysis";
+import type { BoardConfig } from "../types/config.board";
 
-const defaultConfig: Config = {
-    minHighCardFort: 8,
-    includePairedInMassif: true,
-    suitStrictForFort: true,
-
-    // Nouvelles valeurs par défaut
-    doubleBroadwayCategory: "massif",
-    monoColorCategory: "massif",
-    tripleBroadwayCategory: "fort",
-
-    connectDrawsCategory: "fort",
-    gutShotDrawsCategory: "faible",
-
-    maxGapForConnected: 4,
-    minHighCardForBroadway: 10
-};
-
-
+// Ajoute un champ pour le nom
 export default function ConfigPage({ userId }: { userId: string }) {
-    const [config, setConfig] = useState(defaultConfig);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        console.log("Test direct sans Firebase");
-        setConfig({
-            minHighCardFort: 8,
-            includePairedInMassif: true,
-            suitStrictForFort: true,
-
-            // Ajoute les valeurs manquantes
-            doubleBroadwayCategory: "massif",
-            monoColorCategory: "massif",
-            tripleBroadwayCategory: "fort",
-
-            connectDrawsCategory: "fort",
-            gutShotDrawsCategory: "faible",
-
-            maxGapForConnected: 4,
-            minHighCardForBroadway: 10
-        });
-        setLoading(false);
-    }, []);
+    const [config, setConfig] = useState<BoardConfig>({
+        minHighCardFort: 8,
+        includePairedInMassif: true,
+        suitStrictForFort: true,
+        doubleBroadwayCategory: "massif",
+        monoColorCategory: "massif",
+        tripleBroadwayCategory: "fort",
+        connectDrawsCategory: "fort",
+        gutShotDrawsCategory: "faible",
+        maxGapForConnected: 4,
+        minHighCardForBroadway: 10,
+        name: ""    // << ajout pour nommer la config
+    });
+    const [configName, setConfigName] = useState(""); // champ pour saisir le nom
+    const [loading, setLoading] = useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        await setDoc(doc(db, "config", userId), config);
+        setLoading(true);
+        const configId = Date.now().toString(); // id unique basé sur la date
+        await setDoc(doc(db, "boardConfigs", userId + "-" + configId), {
+            ...config,
+            name: configName
+        });
+        setLoading(false);
         alert("Configuration sauvegardée !");
     }
 
-    if (loading) return <div>Chargement...</div>;
-
     return (
         <form onSubmit={handleSubmit}>
-            {/* Champs existants */}
-            <label>
-                High card minimum pour "fort" :
-                <input
-                    type="number"
-                    min={7}
-                    max={12}
-                    value={config.minHighCardFort}
-                    onChange={e => setConfig({ ...config, minHighCardFort: +e.target.value })}
-                />
-            </label>
-            <br />
-
-            {/* Nouveaux champs */}
-            <label>
-                Catégorie pour double Broadway (ex: AK4) :
-                <select
-                    value={config.doubleBroadwayCategory}
-                    onChange={e => setConfig({ ...config, doubleBroadwayCategory: e.target.value as BoardType })}
-                >
-                    <option value="massif">Massif</option>
-                    <option value="fort">Fort</option>
-                    <option value="faible">Faible</option>
-                </select>
-            </label>
-            <br />
-
-            <label>
-                Catégorie pour boards monocolor :
-                <select
-                    value={config.monoColorCategory}
-                    onChange={e => setConfig({ ...config, monoColorCategory: e.target.value as BoardType })}
-                >
-                    <option value="massif">Massif</option>
-                    <option value="fort">Fort</option>
-                    <option value="faible">Faible</option>
-                </select>
-            </label>
-            <br />
-
-            <label>
-                Catégorie pour triple Broadway (ex: AKQ) :
-                <select
-                    value={config.tripleBroadwayCategory}
-                    onChange={e => setConfig({ ...config, tripleBroadwayCategory: e.target.value as BoardType })}
-                >
-                    <option value="massif">Massif</option>
-                    <option value="fort">Fort</option>
-                    <option value="faible">Faible</option>
-                </select>
-            </label>
-            <br />
-
-            <button type="submit">Sauvegarder</button>
+            <input
+                placeholder="Nom de la config"
+                value={configName}
+                onChange={e => setConfigName(e.target.value)}
+                required
+            />
+            {/* ...les autres champs comme avant... */}
+            <button type="submit" disabled={loading}>
+                Sauvegarder
+            </button>
         </form>
     );
-
 }

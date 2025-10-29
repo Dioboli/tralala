@@ -16,6 +16,7 @@
     // Configuration des seuils
     maxGapForConnected: number; // par défaut 4
     minHighCardForBroadway: number; // par défaut 10 (pour T,J,Q,K,A)
+    date: string;
 }
 
 

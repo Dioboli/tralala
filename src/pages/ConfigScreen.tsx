@@ -1,11 +1,16 @@
-﻿// src/pages/ConfigPage.tsx
-import ConfigPage from "../components/ConfigPage"; // si tu sépares le formulaire en composant
+﻿// src/pages/ConfigScreen.tsx
+import ConfigPage from "../components/ConfigPage";
+import { useFirebaseUser } from "../auth/useFirebaseUser";
 
-export default function ConfigScreen({ userId }: { userId: string }) {
+export default function ConfigScreen() {
+    const { user } = useFirebaseUser();
+
+    if (!user) return <div>Chargement utilisateur...</div>;
+
     return (
         <div>
             <h2>Configuration de l'entraînement</h2>
-            <ConfigPage userId={userId} />
+            <ConfigPage userId={user.uid} />
         </div>
     );
 }

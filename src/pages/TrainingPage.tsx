@@ -7,32 +7,36 @@ import {
     getDoc,
     type FirestoreDataConverter,
 } from "firebase/firestore";
-import type { Config } from "../utils/boardAnalysis"; // ton type Config existant
+import type { Config } from "../utils/boardAnalysis";
+import { useFirebaseUser } from "../auth/useFirebaseUser";
 
 // --- Firestore converter pour le typage automatique ---
 const configConverter: FirestoreDataConverter<Config> = {
     toFirestore(config: Config) {
-        return config; // conversion simple ici
+        return config;
     },
     fromFirestore(snapshot) {
         return snapshot.data() as Config;
     },
 };
 
-export default function TrainingPage({ userId }: { userId: string }) {
+export default function TrainingPage() {
+    const { user } = useFirebaseUser();
     const [config, setConfig] = useState<Config | null>(null);
 
     useEffect(() => {
+        if (!user) return; // Ne fait rien tant qu’on n’a pas l’utilisateur
+
         async function fetchConfig() {
-            // Application du converter directement sur la référence Firestore
-            const ref = doc(db, "users", userId).withConverter(configConverter);
+            const ref = doc(db, "users", user!.uid).withConverter(configConverter);
             const snap = await getDoc(ref);
             setConfig(snap.exists() ? snap.data() : null);
         }
 
         fetchConfig();
-    }, [userId]);
+    }, [user]);
 
+    if (!user) return <div>Chargement utilisateur...</div>;
     if (!config) return <div>Chargement config...</div>;
 
     return (
