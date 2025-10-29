@@ -2,7 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import TrainingPage from "./pages/TrainingPage";
-import ConfigScreen from "./pages/ConfigScreen";
+import ConfigPage from "./pages/ConfigPage";
 import ExercicesPage from "./pages/ExercicesPage";
 import LoginForm from "./auth/LoginForm";
 import SignupForm from "./auth/SignupForm";
@@ -22,7 +22,7 @@ export default function App() {
                     <Route element={<ProtectedRoute />}>
                         <Route path="/" element={<Navigate to="/exercices" />} />
                         <Route path="/training" element={<TrainingPage />} />
-                        <Route path="/config" element={<ConfigScreen />} />
+                        <Route path="/config" element={<ConfigPage />} />
                         <Route path="/exercices" element={<ExercicesPage />} />
                     </Route>
                 </Routes>

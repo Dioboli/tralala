@@ -1,6 +1,6 @@
 ﻿// src/TestFirebase.tsx
-import React, { useEffect, useState } from "react";
-import { db } from "./firebase";
+import { useState } from "react";
+import { db } from "../firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export default function TestFirebase() {
