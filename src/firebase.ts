@@ -4,14 +4,14 @@ import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth"
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCzosOtOMo7WWMq0ynYy-4vjYO1Zu_FFOM",
-    authDomain: "knowyourrange-4af90.firebaseapp.com",
-    projectId: "knowyourrange-4af90",
-    storageBucket: "knowyourrange-4af90.appspot.com",
-    messagingSenderId: "801110125579",
-    appId: "1:801110125579:web:2a659a148600145473eb0e",
-    measurementId: "G-V245XE3C7L"
-};
+    apiKey: import.meta.env.VITE_API_KEY,
+    authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_APP_ID,
+    measurementId: import.meta.env.VITE_MEASUREMENT_ID,
+}
 
 const app = initializeApp(firebaseConfig);
 
