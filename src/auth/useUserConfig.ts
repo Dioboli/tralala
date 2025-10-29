@@ -1,7 +1,7 @@
 ﻿// src/auth/useUserConfig.ts
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import type { Config } from "../types/config.board";
 import { encodeEmail } from "../utils/emailUtils";
 
@@ -18,18 +18,17 @@ export function useUserConfig(userEmail: string | null) {
 
         async function fetchConfig(email: string) {
             const docId = encodeEmail(email);
-            const ref = doc(db, "users", docId);
+            const ref = doc(db, "boardConfigs", docId); // /boardConfigs (et plus /users)
             const snap = await getDoc(ref);
             if (snap.exists()) {
                 setConfig(snap.data() as Config);
             } else {
-                await setDoc(ref, { boardTypes: [] });
-                setConfig({ boardTypes: [] });
+                setConfig(null);
             }
             setLoading(false);
         }
 
-        fetchConfig(userEmail); // On passe toujours l'email "brut"
+        fetchConfig(userEmail);
     }, [userEmail]);
 
     return { config, setConfig, loading };

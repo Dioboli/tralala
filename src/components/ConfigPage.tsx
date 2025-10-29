@@ -2,22 +2,24 @@
 import React, { useState } from "react";
 import { db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
-import type { BoardConfig } from "../types/config.board";
+import type { Config } from "../types/config.board";
 
 // Ajoute un champ pour le nom
 export default function ConfigPage({ userId }: { userId: string }) {
-    const [config, setConfig] = useState<BoardConfig>({
+    const [config, setConfig] = useState<Config>({
         minHighCardFort: 8,
         includePairedInMassif: true,
         suitStrictForFort: true,
         doubleBroadwayCategory: "massif",
         monoColorCategory: "massif",
-        tripleBroadwayCategory: "fort",
+        tripleBroadwayCategory: "massif",
         connectDrawsCategory: "fort",
         gutShotDrawsCategory: "faible",
         maxGapForConnected: 4,
         minHighCardForBroadway: 10,
-        name: ""    // << ajout pour nommer la config
+        boardTypes: [],
+        date: new Date().toISOString(),
+        name: "Ma configuration par défaut" // ⇦ OBLIGATOIRE désormais
     });
     const [configName, setConfigName] = useState(""); // champ pour saisir le nom
     const [loading, setLoading] = useState(false);

@@ -7,7 +7,20 @@
 }
 
 export interface Config {
+    // Anciennes options
+    minHighCardFort: number;
+    includePairedInMassif: boolean;
+    suitStrictForFort: boolean;
+    doubleBroadwayCategory: "massif" | "fort" | "faible";
+    monoColorCategory: "massif" | "fort" | "faible";
+    tripleBroadwayCategory: "massif" | "fort" | "faible";
+    connectDrawsCategory: "massif" | "fort" | "faible";
+    gutShotDrawsCategory: "massif" | "fort" | "faible";
+    maxGapForConnected: number;
+    minHighCardForBroadway: number;
+
+    // Nouveaux ajouts éventuels
     boardTypes: UserBoardType[];
     date: string;
-    // ... autres champs si besoin
+    name: string;
 }
