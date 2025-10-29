@@ -1,4 +1,9 @@
-﻿export interface Config {
+﻿// src/utils/boardAnalysis
+// SUPPRIME TOUTE la déclaration de l'interface Config ici
+
+import type { Config } from "../types/config.board";
+
+/*export interface Config {
     // Anciennes options
     minHighCardFort: number;
     includePairedInMassif: boolean;
@@ -17,7 +22,7 @@
     maxGapForConnected: number; // par défaut 4
     minHighCardForBroadway: number; // par défaut 10 (pour T,J,Q,K,A)
     date: string;
-}
+}*/
 
 
 export type BoardType = "massif" | "fort" | "faible";

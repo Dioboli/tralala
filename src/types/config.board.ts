@@ -8,5 +8,6 @@
 
 export interface Config {
     boardTypes: UserBoardType[];
+    date: string;
     // ... autres champs si besoin
 }

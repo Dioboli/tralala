@@ -9,7 +9,7 @@ import {
     deleteDoc,
     type FirestoreDataConverter,
 } from "firebase/firestore";
-import type { Config } from "../utils/boardAnalysis"; // Adapte ce chemin à ta base
+import type { Config } from "../types/config.board"; // Adapte ce chemin à ta base
 
 // --- Firestore converter optionnel pour TS ---
 const configConverter: FirestoreDataConverter<Config> = {

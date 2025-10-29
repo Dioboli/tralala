@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import type { Config } from "../types/config";
+import type { Config } from "../types/config.board";
 import { encodeEmail } from "../utils/emailUtils";
 
 // userEmail obtenu via FirebaseAuth (ex: auth.currentUser.email)
