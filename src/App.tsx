@@ -1,8 +1,8 @@
 ﻿// src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./auth/ProtectedRoute";
-import TrainingPage from "./pages/TrainingPage";
-import ConfigPage from "./pages/ConfigPage";
+import TrainingBoardPage from "./pages/TrainingBoardPage";
+import ConfigBoardPage from "./pages/ConfigBoardPage";
 import ExercicesPage from "./pages/ExercicesPage";
 import LoginForm from "./auth/LoginForm";
 import SignupForm from "./auth/SignupForm";
@@ -21,8 +21,8 @@ export default function App() {
                     {/* Toutes les routes privées sont enfants de ProtectedRoute */}
                     <Route element={<ProtectedRoute />}>
                         <Route path="/" element={<Navigate to="/exercices" />} />
-                        <Route path="/training" element={<TrainingPage />} />
-                        <Route path="/config" element={<ConfigPage />} />
+                        <Route path="/training-board" element={<TrainingBoardPage />} />
+                        <Route path="/config-board" element={<ConfigBoardPage />} />
                         <Route path="/exercices" element={<ExercicesPage />} />
                     </Route>
                 </Routes>

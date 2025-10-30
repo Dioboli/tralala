@@ -1,26 +1,19 @@
-﻿export interface UserBoardType {
-    id: string;
-    name: string;
-    count: number;
-    color?: string;
-    categories: string[];
-}
+﻿// src/types/config.board.ts
 
 export interface Config {
-    // Anciennes options
-    minHighCardFort: number;
-    includePairedInMassif: boolean;
-    suitStrictForFort: boolean;
-    doubleBroadwayCategory: "massif" | "fort" | "faible";
-    monoColorCategory: "massif" | "fort" | "faible";
-    tripleBroadwayCategory: "massif" | "fort" | "faible";
-    connectDrawsCategory: "massif" | "fort" | "faible";
-    gutShotDrawsCategory: "massif" | "fort" | "faible";
-    maxGapForConnected: number;
-    minHighCardForBroadway: number;
+    name: string;           // Nom du board
+    minHighCard: number;    // Carte la plus haute (ex: 14 pour A)
+    maxLowCard: number;     // Carte la plus basse (ex: 2)
+    // Ajoute ici d’autres options au fur et à mesure
+}
 
-    // Nouveaux ajouts éventuels
-    boardTypes: UserBoardType[];
-    date: string;
-    name: string;
+export interface Board {
+    id: string;
+    config: Config;
+}
+
+export interface TrainerConfig {
+    id: string;
+    nom: string;            // Nom général du trainer
+    boards: Board[];        // Plusieurs boards attachés au trainer
 }

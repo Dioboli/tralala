@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { PokerTable } from "../../components/PokerTable";
 import { generateRandomBoard } from "../../utils/generateRandomBoard";
 import { guessType } from "../../utils/boardAnalysis";
-import type { Config } from "../../utils/boardAnalysis";
+import type { Config } from "../../types/config.board";
 
 type BoardType = "massif" | "fort" | "faible";
 
@@ -20,13 +20,13 @@ interface BoardAdvantageProps {
 export const BoardAdvantage = ({ config }: BoardAdvantageProps) => {
     const [board, setBoard] = useState<string[]>(generateRandomBoard());
     const [feedback, setFeedback] = useState("");
-    const [type, setType] = useState<BoardType>(guessType(board));
+    const [type, setType] = useState<BoardType>(guessType(board, config));
 
     // Quand on change de board, on analyse selon la config reçue
     const nextBoard = () => {
         const newBoard = generateRandomBoard();
         setBoard(newBoard);
-        setType(guessType(newBoard) as BoardType);
+        setType(guessType(newBoard, config) as BoardType);
         setFeedback("");
     };
 
@@ -38,7 +38,7 @@ export const BoardAdvantage = ({ config }: BoardAdvantageProps) => {
 
     // Met à jour l'affichage quand la config change
     React.useEffect(() => {
-        setType(guessType(board) as BoardType);
+        setType(guessType(board, config) as BoardType);
     }, [config, board]);
 
     return (
