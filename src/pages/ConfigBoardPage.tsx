@@ -1,77 +1,86 @@
 ﻿import { useState, useEffect } from "react";
-import { db } from "../firebase";
-import { collection, getDocs, doc, setDoc } from "firebase/firestore";
 import { useAuth } from "../auth/useAuth";
 import CardRangeDropdown from "../components/CardRangeDropdown";
-import type { TrainerConfig, Board } from "../types/config.board";
-import { v4 as uuid } from "uuid";
+import type { Board } from "../types/config.board";
+import {
+    createBoard,
+    getTrainerBoards,
+    deleteBoard,
+    listTrainerNames,
+    createTrainer,
+} from "../firebase/boardConfigs";
 
 const defaultRange = { start: 14, end: 2 };
 
 export default function ConfigBoardPage() {
     const { user } = useAuth();
-    const [trainers, setTrainers] = useState<TrainerConfig[]>([]);
-    const [selectedTrainerId, setSelectedTrainerId] = useState<string | null>(null);
+    const [trainerNames, setTrainerNames] = useState<string[]>([]);
+    const [selectedTrainer, setSelectedTrainer] = useState<string | null>(null);
     const [newTrainerName, setNewTrainerName] = useState("");
+    const [boards, setBoards] = useState<Board[]>([]);
     const [newBoardName, setNewBoardName] = useState("");
     const [newBoardRange, setNewBoardRange] = useState(defaultRange);
 
-    // Charger les trainers
-    useEffect(() => {
-        if (!user || !user.email) return;
-        const email = user.email;
+    // Utiliser user.uid DE PREFERENCE si possible !
+    const userId = user?.email || "";
 
+    // Charger la liste des trainers pour l'utilisateur
+    useEffect(() => {
+        if (!userId) return;
         async function fetchTrainers() {
-            const colRef = collection(db, "users", email, "trainers");
-            const snap = await getDocs(colRef);
-            const allTrainers = snap.docs.map(tr => ({
-                id: tr.id,
-                ...tr.data()
-            })) as TrainerConfig[];
-            setTrainers(allTrainers);
+            const names = await listTrainerNames(userId);
+            setTrainerNames(names);
         }
         fetchTrainers();
-    }, [user]);
+    }, [userId]);
 
-    // Ajout d'un trainer
+    // Charger les boards d’un trainer sélectionné
+    useEffect(() => {
+        if (!userId || !selectedTrainer) {
+            setBoards([]);
+            return;
+        }
+        async function fetchBoards() {
+            if (!userId || !selectedTrainer) {
+                setBoards([]);
+                return;
+            }
+            const result = await getTrainerBoards(userId, selectedTrainer);
+            setBoards(result);
+        }
+        fetchBoards();
+    }, [userId, selectedTrainer]);
+
+    // Créer un nouveau trainer
     const handleAddTrainer = async () => {
-        if (!user || !user.email || !newTrainerName.trim()) return;
-        const email = user.email;
-        const id = uuid();
-        const trainer: TrainerConfig = { id, nom: newTrainerName, boards: [] };
-        await setDoc(doc(db, "users", email, "trainers", id), trainer);
-        setTrainers([...trainers, trainer]);
+        if (!userId || !newTrainerName.trim()) return;
+        await createTrainer(userId, newTrainerName.trim());
+        setTrainerNames([...trainerNames, newTrainerName.trim()]);
         setNewTrainerName("");
     };
 
-    // Sélectionner un trainer
-    const selectedTrainer = trainers.find(tr => tr.id === selectedTrainerId);
-
-    // Ajouter un nouveau board au trainer sélectionné
+    // Créer un nouveau board pour le trainer sélectionné
     const handleAddBoard = async () => {
-        if (!selectedTrainer || !newBoardName.trim()) return;
+        if (!userId || !selectedTrainer || !newBoardName.trim()) return;
         const board: Board = {
-            id: uuid(),
+            id: newBoardName.trim(), // ou uuid(), selon tes besoins
             config: {
-                name: newBoardName,
+                name: newBoardName.trim(),
                 minHighCard: newBoardRange.start,
                 maxLowCard: newBoardRange.end
             }
         };
-        const updatedTrainer = {
-            ...selectedTrainer,
-            boards: [...selectedTrainer.boards, board]
-        };
-        if (!user || !user.email) {
-            console.error("L'utilisateur n'est pas connecté ou l'email est indisponible");
-            return; // ou gérer autrement
-        }
-
-        const email = user.email; // TS comprend que email est string non nul ici
-        await setDoc(doc(db, "users", email, "trainers", updatedTrainer.id), updatedTrainer);
-        setTrainers(trainers.map(t => t.id === updatedTrainer.id ? updatedTrainer : t));
+        await createBoard(userId, selectedTrainer, board);
+        setBoards([...boards, board]);
         setNewBoardName("");
         setNewBoardRange(defaultRange);
+    };
+
+    // Suppression d’un board
+    const handleDeleteBoard = async (boardId: string) => {
+        if (!userId || !selectedTrainer) return;
+        await deleteBoard(userId, selectedTrainer, boardId);
+        setBoards(boards.filter(b => b.id !== boardId));
     };
 
     if (!user) return <div>Connectez-vous pour accéder à cette page.</div>;
@@ -79,7 +88,6 @@ export default function ConfigBoardPage() {
     return (
         <div>
             <h2>Gestion des Trainers et Boards</h2>
-
             {/* Création d’un nouveau trainer */}
             <div style={{ marginBottom: 24 }}>
                 <input
@@ -94,33 +102,31 @@ export default function ConfigBoardPage() {
             <div>
                 <h3>Trainers existants</h3>
                 <ul>
-                    {trainers.map(tr => (
-                        <li key={tr.id}>
+                    {trainerNames.map(name => (
+                        <li key={name}>
                             <button
-                                onClick={() => setSelectedTrainerId(tr.id)}
-                                style={{
-                                    fontWeight: selectedTrainerId === tr.id ? "bold" : "normal"
-                                }}
+                                onClick={() => setSelectedTrainer(name)}
+                                style={{ fontWeight: selectedTrainer === name ? "bold" : "normal" }}
                             >
-                                {tr.nom}
+                                {name}
                             </button>
                         </li>
                     ))}
                 </ul>
             </div>
 
-            {/* Affichage du trainer sélectionné et ajout/modif de boards */}
+            {/* Affichage des boards du trainer sélectionné et ajout */}
             {selectedTrainer && (
                 <div style={{ marginTop: 32 }}>
-                    <h3>Boards pour « {selectedTrainer.nom} »</h3>
+                    <h3>Boards pour « {selectedTrainer} »</h3>
                     <ul>
-                        {selectedTrainer.boards.map(board => (
+                        {boards.map(board => (
                             <li key={board.id}>
                                 <b>{board.config.name} :</b> Range {board.config.minHighCard} à {board.config.maxLowCard}
+                                <button style={{ marginLeft: 16 }} onClick={() => handleDeleteBoard(board.id)}>Supprimer</button>
                             </li>
                         ))}
                     </ul>
-                    {/* Ajout d'un nouveau board */}
                     <div style={{ border: "1px solid #ddd", padding: 16, marginTop: 16 }}>
                         <h4>Ajouter un board au trainer</h4>
                         <input

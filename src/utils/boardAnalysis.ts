@@ -1,29 +1,6 @@
 ﻿// src/utils/boardAnalysis
-// SUPPRIME TOUTE la déclaration de l'interface Config ici
 
 import type { Config } from "../types/config.board";
-
-/*export interface Config {
-    // Anciennes options
-    minHighCardFort: number;
-    includePairedInMassif: boolean;
-    suitStrictForFort: boolean;
-
-    // Nouvelles options
-    doubleBroadwayCategory: "massif" | "fort" | "faible";
-    monoColorCategory: "massif" | "fort" | "faible";
-    tripleBroadwayCategory: "massif" | "fort" | "faible";
-
-    // Options avancées
-    connectDrawsCategory: "massif" | "fort" | "faible";
-    gutShotDrawsCategory: "massif" | "fort" | "faible";
-
-    // Configuration des seuils
-    maxGapForConnected: number; // par défaut 4
-    minHighCardForBroadway: number; // par défaut 10 (pour T,J,Q,K,A)
-    date: string;
-}*/
-
 
 export type BoardType = "massif" | "fort" | "faible";
 
@@ -61,11 +38,6 @@ export function guessType(board: string[], config: Config): BoardType {
             suitPetites = true;
         }
     }
-
-    // Ajout : gestion paramétrable
-    const isDoubleBroadway = broadways.length === 2;
-    if (isMonoColor) return config.monoColorCategory;
-    if (isDoubleBroadway) return config.doubleBroadwayCategory;
 
     // Reste de ta logique
     const isMassif =
