@@ -1,72 +1,72 @@
 ﻿import { useState, useEffect } from "react";
+import { useAuth } from "../auth/useAuth";
+import BoardTrainerList from "../components/BoardTrainerList";
+import BoardTrainerCreateForm from "../components/BoardTrainerCreateForm";
+import { listTrainerNames, createTrainer, getTrainerBoards } from "../firebase/boardConfigs";
 import { BoardAdvantage } from "../modules/postflop/BoardAdvantage";
-import { db } from "../firebase";
-import {
-    collection,
-    getDocs,
-    type FirestoreDataConverter
-} from "firebase/firestore";
-import { useFirebaseUser } from "../auth/useFirebaseUser";
-import type { TrainerConfig } from "../types/config.board";
-
-const trainerConverter: FirestoreDataConverter<TrainerConfig> = {
-    toFirestore(trainer: TrainerConfig) {
-        return trainer;
-    },
-    fromFirestore(snapshot) {
-        return snapshot.data() as TrainerConfig;
-    },
-};
+import type { Board } from "../types/config.board";
 
 export default function TrainingBoardPage() {
-    const { user } = useFirebaseUser();
-    const [trainers, setTrainers] = useState<TrainerConfig[]>([]);
-    const [selectedTrainer, setSelectedTrainer] = useState<TrainerConfig | null>(null);
+    const { user } = useAuth();
+    const [trainers, setTrainers] = useState<string[]>([]);
+    const [selectedTrainer, setSelectedTrainer] = useState<string | null>(null);
+    const [boards, setBoards] = useState<Board[]>([]);
 
+    // Charger la liste des trainers à la connexion
     useEffect(() => {
         if (!user) return;
         async function fetchTrainers() {
-            const colRef = collection(db, "users", user!.uid, "trainers").withConverter(trainerConverter);
-            const snap = await getDocs(colRef);
-            const loaded = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-            setTrainers(loaded);
-            // Optionnel: sélectionner le premier trainer au chargement
-            setSelectedTrainer(loaded[0] ?? null);
+            const names = await listTrainerNames(user!.uid);
+            setTrainers(names);
+            setSelectedTrainer(names[0] || null);
         }
         fetchTrainers();
     }, [user]);
 
-    if (!user) return <div>Chargement utilisateur...</div>;
+    // Charger les boards du trainer sélectionné
+    useEffect(() => {
+        if (!user || !selectedTrainer) {
+            setBoards([]);
+            return;
+        }
+        async function fetchBoards() {
+            const result = await getTrainerBoards(user!.uid, selectedTrainer!);
+            setBoards(result);
+        }
+        fetchBoards();
+    }, [user, selectedTrainer]);
 
-    // Affiche un lien vers la page de config si aucun trainer existe
-    if (trainers.length === 0) {
-        return (
-            <div>
-                <h2>Entraînement reconnaissance boards postflop</h2>
-                <p>Aucun trainer configuré pour le moment.</p>
-                <a href="/config-board">Créer un trainer</a>
-            </div>
-        );
-    }
+    // Création d'un nouveau trainer board
+    const handleAddTrainer = async (name: string) => {
+        if (!user) return;
+        await createTrainer(user.uid, name);
+        setTrainers(prev => [...prev, name]);
+        setSelectedTrainer(name);
+    };
+
+    if (!user) return <div>Connectez-vous pour accéder à cette page.</div>;
 
     return (
         <div>
-            <h2>Mes trainers board</h2>
-            <ul style={{ marginBottom: 16 }}>
-                {trainers.map((trainer) => (
-                    <li key={trainer.id}>
-                        <button
-                            onClick={() => setSelectedTrainer(trainer)}
-                            style={{ marginRight: 8, fontWeight: trainer.id === selectedTrainer?.id ? "bold" : "normal" }}
-                        >
-                            {trainer.nom}
-                        </button>
-                    </li>
-                ))}
-            </ul>
-            <a href="/trainer-config">Gérer/Créer un trainer</a>
-            {selectedTrainer && (
-                <BoardAdvantage config={selectedTrainer.config} />
+            <h2>Entraînement reconnaissance boards postflop</h2>
+
+            <BoardTrainerCreateForm onCreate={handleAddTrainer} />
+
+            <h3>Trainers Board existants</h3>
+            <BoardTrainerList
+                trainers={trainers}
+                selected={selectedTrainer}
+                onSelect={setSelectedTrainer}
+            />
+
+            {!selectedTrainer || boards.length === 0 ? (
+                <p>Aucun board dans ce trainer. Ajoutez-en dans la page de configuration.</p>
+            ) : (
+                <div>
+                    <h3>Entraînez-vous sur « {selectedTrainer} »</h3>
+                    {/* Ici, tu peux afficher ton BoardAdvantage (ou tout autre composant d’exercice) */}
+                    <BoardAdvantage config={boards[0].config} />
+                </div>
             )}
         </div>
     );

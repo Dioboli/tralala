@@ -9,11 +9,14 @@ import {
     listTrainerNames,
     createTrainer,
 } from "../firebase/boardConfigs";
+import { ErrorBanner } from "../components/ErrorBanner";
+import { useGlobalError } from "../context/useGlobalError"; // <-- AJOUT
 
 const defaultRange = { start: 14, end: 2 };
 
 export default function ConfigBoardPage() {
     const { user } = useAuth();
+    const { setError } = useGlobalError(); // <-- AJOUT
     const [trainerNames, setTrainerNames] = useState<string[]>([]);
     const [selectedTrainer, setSelectedTrainer] = useState<string | null>(null);
     const [newTrainerName, setNewTrainerName] = useState("");
@@ -21,72 +24,88 @@ export default function ConfigBoardPage() {
     const [newBoardName, setNewBoardName] = useState("");
     const [newBoardRange, setNewBoardRange] = useState(defaultRange);
 
-    // Utiliser user.uid DE PREFERENCE si possible !
-    const userId = user?.email || "";
+    const userId = user?.uid || "";
 
-    // Charger la liste des trainers pour l'utilisateur
     useEffect(() => {
         if (!userId) return;
         async function fetchTrainers() {
-            const names = await listTrainerNames(userId);
-            setTrainerNames(names);
+            try {
+                const names = await listTrainerNames(userId);
+                setTrainerNames(names);
+            } catch (err: unknown) {
+                if (err instanceof Error) setError(err.message);
+                else setError("Erreur de chargement trainers");
+            }
         }
         fetchTrainers();
-    }, [userId]);
+    }, [userId, setError]);
 
-    // Charger les boards d’un trainer sélectionné
     useEffect(() => {
         if (!userId || !selectedTrainer) {
             setBoards([]);
             return;
         }
         async function fetchBoards() {
-            if (!userId || !selectedTrainer) {
-                setBoards([]);
-                return;
+            try {
+                const result = await getTrainerBoards(userId, selectedTrainer!);
+                setBoards(result);
+            } catch (err: unknown) {
+                if (err instanceof Error) setError(err.message);
+                else setError("Erreur de chargement des boards");
             }
-            const result = await getTrainerBoards(userId, selectedTrainer);
-            setBoards(result);
         }
         fetchBoards();
-    }, [userId, selectedTrainer]);
+    }, [userId, selectedTrainer, setError]);
 
-    // Créer un nouveau trainer
     const handleAddTrainer = async () => {
-        if (!userId || !newTrainerName.trim()) return;
-        await createTrainer(userId, newTrainerName.trim());
-        setTrainerNames([...trainerNames, newTrainerName.trim()]);
-        setNewTrainerName("");
+        try {
+            if (!userId || !newTrainerName.trim()) return;
+            await createTrainer(userId, newTrainerName.trim());
+            setTrainerNames([...trainerNames, newTrainerName.trim()]);
+            setNewTrainerName("");
+        } catch (err: unknown) {
+            if (err instanceof Error) setError(err.message);
+            else setError("Erreur création trainer");
+        }
     };
 
-    // Créer un nouveau board pour le trainer sélectionné
     const handleAddBoard = async () => {
-        if (!userId || !selectedTrainer || !newBoardName.trim()) return;
-        const board: Board = {
-            id: newBoardName.trim(), // ou uuid(), selon tes besoins
-            config: {
-                name: newBoardName.trim(),
-                minHighCard: newBoardRange.start,
-                maxLowCard: newBoardRange.end
-            }
-        };
-        await createBoard(userId, selectedTrainer, board);
-        setBoards([...boards, board]);
-        setNewBoardName("");
-        setNewBoardRange(defaultRange);
+        try {
+            if (!userId || !selectedTrainer || !newBoardName.trim()) return;
+            const board: Board = {
+                id: newBoardName.trim(),
+                config: {
+                    name: newBoardName.trim(),
+                    minHighCard: newBoardRange.start,
+                    maxLowCard: newBoardRange.end
+                }
+            };
+            await createBoard(userId, selectedTrainer, board);
+            setBoards([...boards, board]);
+            setNewBoardName("");
+            setNewBoardRange(defaultRange);
+        } catch (err: unknown) {
+            if (err instanceof Error) setError(err.message);
+            else setError("Erreur création board");
+        }
     };
 
-    // Suppression d’un board
     const handleDeleteBoard = async (boardId: string) => {
-        if (!userId || !selectedTrainer) return;
-        await deleteBoard(userId, selectedTrainer, boardId);
-        setBoards(boards.filter(b => b.id !== boardId));
+        try {
+            if (!userId || !selectedTrainer) return;
+            await deleteBoard(userId, selectedTrainer, boardId);
+            setBoards(boards.filter(b => b.id !== boardId));
+        } catch (err: unknown) {
+            if (err instanceof Error) setError(err.message);
+            else setError("Erreur suppression board");
+        }
     };
 
     if (!user) return <div>Connectez-vous pour accéder à cette page.</div>;
 
     return (
         <div>
+            <ErrorBanner /> {/* Affiche l’erreur globale le cas échéant */}
             <h2>Gestion des Trainers et Boards</h2>
             {/* Création d’un nouveau trainer */}
             <div style={{ marginBottom: 24 }}>
